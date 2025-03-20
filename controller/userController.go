@@ -67,6 +67,7 @@ func Signup() gin.HandlerFunc {
 					"error": validationErr.Error(),
 				},
 			)
+			return
 		}
 
 		count, err := userCollection.CountDocuments(ctxWithTimeout, bson.M{
@@ -80,6 +81,7 @@ func Signup() gin.HandlerFunc {
 					"error": "error occured while checking for email",
 				},
 			)
+			return
 		}
 		if count > 0 {
 			ctx.JSON(
@@ -88,6 +90,7 @@ func Signup() gin.HandlerFunc {
 					"error": "this email or phone number is already exists",
 				},
 			)
+			return
 		}
 
 		password := HashPassword(*user.Password)
@@ -104,6 +107,7 @@ func Signup() gin.HandlerFunc {
 					"error": "error occured while checking for phone number",
 				},
 			)
+			return
 		}
 
 		if count > 0 {
@@ -113,6 +117,7 @@ func Signup() gin.HandlerFunc {
 					"error": "this email or phone number is already exists",
 				},
 			)
+			return
 		}
 
 		user.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
@@ -160,10 +165,11 @@ func Login() gin.HandlerFunc {
 
 		err := userCollection.FindOne(ctxWithTimeout, bson.M{"email": user.Email}).Decode(&foundUser)
 		if err != nil {
+			log.Println(err)
 			ctx.JSON(
 				http.StatusInternalServerError,
 				gin.H{
-					"error": "email or password is incorrect",
+					"error": "email or password is incorrect" + err.Error(),
 				},
 			)
 			return
